@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="formProperties" name="BS Form Properties" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:initiator="startUser"></startEvent>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <userTask id="usertask1" name="User Task" activiti:candidateUsers="{user(${startUser})}">
+      <documentation>Enter the Details below</documentation>
+      <extensionElements>
+        <activiti:formProperty id="stringType" name="Enter your Name" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="booleanType" name="Choose one" type="boolean" required="true"></activiti:formProperty>
+        <activiti:formProperty id="numberType" name="Enter a Number" type="long" required="true"></activiti:formProperty>
+        <activiti:formProperty id="plainTextType" name="Enter Plain Text" type="plainText" required="true"></activiti:formProperty>
+        <activiti:formProperty id="fileUploadType" name="Upload a file" type="fileUpload" required="true"></activiti:formProperty>
+        <activiti:formProperty id="textareaType" name="Enter your Address" type="textarea" required="true"></activiti:formProperty>
+        <activiti:formProperty id="checkboxType" name="Choose Prog. Lang." type="checkbox" required="true">
+          <activiti:value id="opt1" name="C"></activiti:value>
+          <activiti:value id="opt2" name="C++"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="datetime" name="Enter Date" type="datetime" required="true"></activiti:formProperty>
+        <activiti:formProperty id="radiobox" name="Choose Gender" type="radiobox" required="true">
+          <activiti:value id="ropt1" name="Male"></activiti:value>
+          <activiti:value id="ropt2" name="Female"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="enum" name="Choose" type="enum" required="true">
+          <activiti:value id="eopt1" name="English"></activiti:value>
+          <activiti:value id="eopt2" name="Maths"></activiti:value>
+          <activiti:value id="multiValue" name="true"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="assetType" name="Choose Asset Type" type="assetType" required="true">
+          <activiti:value id="multiValue" name="true"></activiti:value>
+          <activiti:value id="proposedFixed" name="true"></activiti:value>
+          <activiti:value id="proposedValues" name="00000000-0000-0000-0000-110000000004,00000000-0000-0000-0000-090000000001,cf03e10a-7d24-42cc-bac1-f59b70f921c3"></activiti:value>
+          <activiti:value id="conceptType" name="00000000-0000-0000-0000-000000031301"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="attributeType" name="Choose Attribute Type" type="attributeType" required="true"></activiti:formProperty>
+        <activiti:formProperty id="role" name="Choose Role" type="role" required="true"></activiti:formProperty>
+        <activiti:formProperty id="user" name="Choose User" type="user" required="true">
+          <activiti:value id="multiValue" name="true"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="term" name="Choose Term" type="term" required="true">
+          <activiti:value id="communityId" name="52e74ed5-f4cb-4738-9a0d-1fc43248ab0f"></activiti:value>
+          <activiti:value id="conceptType" name="00000000-0000-0000-0000-000000031008"></activiti:value>
+          <activiti:value id="statusId" name="00000000-0000-0000-0000-000000005008"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="vocabulary" name="Choose Vocabulary" type="vocabulary" required="true"></activiti:formProperty>
+        <activiti:formProperty id="relationType" name="Choose Relation" type="relationType" required="true"></activiti:formProperty>
+        <activiti:formProperty id="domainType" name="Choose Domains" type="domainType" required="true">
+          <activiti:value id="helpText" name="Choose the broader domain type Eg. Glossary, Physical Data Dictionary"></activiti:value>
+          <activiti:value id="multiValue" name="true"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="group" name="Choose group" type="group" required="true"></activiti:formProperty>
+        <activiti:formProperty id="button" name="Complete" type="button" required="true"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="usertask1"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="usertask1" targetRef="endevent1"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_formProperties">
+    <bpmndi:BPMNPlane bpmnElement="formProperties" id="BPMNPlane_formProperties">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="220.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="830.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="410.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="255.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="410.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="515.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="830.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

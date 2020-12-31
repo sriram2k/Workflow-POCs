@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.collibra.com/apiv2">
+  <process id="dynamicEnum" name="BS Dynamic Enum" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:initiator="sriram"></startEvent>
+    <scriptTask id="scripttask1" name="Script Task" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[import com.collibra.dgc.core.api.dto.instance.attribute.FindAttributesRequest
+import com.collibra.dgc.core.api.dto.meta.attributetype.FindAttributeTypesRequest
+import com.collibra.dgc.core.api.dto.meta.attributetype.AttributeKind
+import com.collibra.dgc.core.api.dto.MatchMode
+
+def attrList = attributeTypeApi.findAttributeTypes(FindAttributeTypesRequest.builder()
+	.name("Database Type")
+	.nameMatchMode(MatchMode.EXACT)
+	.kind(AttributeKind.SINGLE_VALUE_LIST)  
+  	.build()).getResults()
+
+
+def allowedValues= attrList.get(0).getAllowedValues()
+
+loggerApi.info("-----------------------------Atr List---------" + attrList)
+loggerApi.info("-----------------------------Atr ID---------" + allowedValues)
+
+def dynamicValues= [:]
+
+for(def values: allowedValues){
+	dynamicValues.put(values,values)	
+}
+
+loggerApi.info("-----------------------------Atr Map ---------" + dynamicValues)
+
+execution.setVariable("dynamicValues",dynamicValues)
+
+def db = execution.getVariable("dynamicValues")
+
+loggerApi.info("-----------------------------Atr Map ---------" + db)
+
+]]></script>
+    </scriptTask>
+    <userTask id="usertask1" name="User Task" activiti:candidateUsers="user(${sriram})">
+      <extensionElements>
+        <activiti:formProperty id="chooseDb" name="Choose the Database" type="dynamicEnum" required="true">
+          <activiti:value id="dynamicValuesExpression" name="${dynamicValues}"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="scripttask1"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="scripttask1" targetRef="usertask1"></sequenceFlow>
+    <sequenceFlow id="flow3" sourceRef="usertask1" targetRef="endevent1"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_dynamicEnum">
+    <bpmndi:BPMNPlane bpmnElement="dynamicEnum" id="BPMNPlane_dynamicEnum">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="160.0" y="212.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="340.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="540.0" y="206.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="870.0" y="224.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="195.0" y="229.0"></omgdi:waypoint>
+        <omgdi:waypoint x="340.0" y="227.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="445.0" y="227.0"></omgdi:waypoint>
+        <omgdi:waypoint x="540.0" y="233.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="645.0" y="233.0"></omgdi:waypoint>
+        <omgdi:waypoint x="870.0" y="241.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

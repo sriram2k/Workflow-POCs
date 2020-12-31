@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.collibra.com/apiv2">
+  <process id="dynamicValuesAssignment" name="BS Dynamic Values" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:initiator="sriram"></startEvent>
+    <userTask id="usertask1" name="Get Community" activiti:candidateUsers="{user(${sriram})}">
+      <extensionElements>
+        <activiti:formProperty id="communityId" name="Enter the Community Name" type="community" required="true">
+          <activiti:value id="helpText" name="Choose your Community"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <scriptTask id="scripttask1" name="Get All Domains" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[import com.collibra.dgc.core.api.dto.instance.community.AddCommunityRequest
+import com.collibra.dgc.core.api.dto.instance.domain.AddDomainRequest
+import com.collibra.dgc.core.api.dto.instance.asset.AddAssetRequest
+import com.collibra.dgc.core.api.dto.instance.relation.AddRelationRequest
+import com.collibra.dgc.core.api.dto.instance.attribute.AddAttributeRequest
+import com.collibra.dgc.core.api.dto.PagedResponse
+import com.collibra.dgc.core.api.dto.instance.community.FindCommunitiesRequest
+import com.collibra.dgc.core.api.dto.meta.domaintype.FindDomainTypesRequest
+import com.collibra.dgc.core.api.dto.meta.assettype.FindAssetTypesRequest
+import com.collibra.dgc.core.api.dto.MatchMode
+import com.collibra.dgc.core.api.model.meta.type.AssetType
+import com.collibra.dgc.core.api.dto.meta.attributetype.FindAttributeTypesRequest
+import com.collibra.dgc.core.api.dto.meta.relationtype.FindRelationTypesRequest
+import com.collibra.dgc.core.api.component.instance.AssetApi
+import com.collibra.dgc.core.api.dto.instance.domain.FindDomainsRequest
+
+loggerApi.info("Community Id" + communityId)
+loggerApi.info("Community  Id Class" + communityId.getClass())
+
+def domainsList = domainApi.findDomains(FindDomainsRequest.builder()
+.communityId(communityId)
+.build()).getResults()
+
+def domainsListId = ""
+loggerApi.info("domainList" + domainsList)
+for(def domainId : domainsList){
+domainsListId = domainsListId + domainId.getId() + ","
+}
+
+loggerApi.info("Domain list id" + domainsListId)
+execution.setVariable("domains",domainsListId.substring(0,domainsListId.length()-1))]]></script>
+    </scriptTask>
+    <userTask id="usertask2" name="Get Domain" activiti:candidateUsers="{user(${sriram})}">
+      <extensionElements>
+        <activiti:formProperty id="domainId" name="Choose the domain" type="domain" required="true">
+          <activiti:value id="proposedFixed" name="true"></activiti:value>
+          <activiti:value id="proposedValues" name="${domains}"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="usertask1"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="usertask1" targetRef="scripttask1"></sequenceFlow>
+    <sequenceFlow id="flow3" sourceRef="scripttask1" targetRef="usertask2"></sequenceFlow>
+    <scriptTask id="scripttask2" name="Get all Assets" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[import com.collibra.dgc.core.api.dto.instance.asset.FindAssetsRequest
+def assetsList = assetApi.findAssets(FindAssetsRequest.builder()
+  .domainId(domainId)
+  .build()).getResults()
+
+def assetsListId = ""
+
+
+for(def asset : assetsList){
+assetsListId = assetsListId + asset.getId() + ","
+}
+
+execution.setVariable("assets",assetsListId.substring(0,assetsListId.length()-1))
+
+loggerApi.info("-------------------------- Assets Fetched Successfully -----------------------")]]></script>
+    </scriptTask>
+    <sequenceFlow id="flow4" sourceRef="usertask2" targetRef="scripttask2"></sequenceFlow>
+    <userTask id="usertask3" name="Get Asset" activiti:candidateUsers="{user(${sriram})}">
+      <extensionElements>
+        <activiti:formProperty id="assetId" name="Choose the Asset" type="asset" required="true">
+          <activiti:value id="proposedFixed" name="true"></activiti:value>
+          <activiti:value id="proposedValues" name="${assets}"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow6" sourceRef="scripttask2" targetRef="usertask3"></sequenceFlow>
+    <scriptTask id="scripttask3" name="Script Task" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[import com.collibra.dgc.core.api.dto.meta.attributetype.FindAttributeTypesRequest
+loggerApi.info("-------------------- Started---------------")
+
+def attrList = attributeTypeApi.findAttributeTypes(FindAttributeTypesRequest.builder()
+  .build()).getResults()
+
+loggerApi.info("-------------------- Entering the for loop ---------------")
+def attrId=""
+for(def attr : attrList){
+attrId = attrId + attr.getId() + ","
+}
+
+execution.setVariable("attributes",attrId.substring(0,attrId.length()-1))]]></script>
+    </scriptTask>
+    <userTask id="usertask4" name="User Task" activiti:candidateUsers="{user(${sriram})}">
+      <extensionElements>
+        <activiti:formProperty id="attributeId" name="Choose Attribute" type="attributeType" required="true">
+          <activiti:value id="proposedFixed" name="true"></activiti:value>
+          <activiti:value id="proposedValues" name="${attributes}"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="description" name="Enter Description" type="string" required="true">
+          <activiti:value id="helpText" name="Give your decription"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow7" sourceRef="usertask3" targetRef="scripttask3"></sequenceFlow>
+    <sequenceFlow id="flow8" sourceRef="scripttask3" targetRef="usertask4"></sequenceFlow>
+    <scriptTask id="scripttask4" name="Script Task" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[
+import com.collibra.dgc.core.api.dto.instance.attribute.AddAttributeRequest
+
+def desAttributeId = attributeApi.addAttribute(AddAttributeRequest.builder()
+.assetId(assetId)
+.typeId(attributeId)
+.value(description)
+.build()).getId()
+
+def com= communityApi.getCommunity(communityId)
+execution.setVariable("comId",com.getName())
+
+def dom= domainApi.getDomain(domainId)
+execution.setVariable("domId",dom.getName())
+
+def assId= assetApi.getAsset(assetId)
+execution.setVariable("asetId",assId.getName())
+
+def attr = attributeApi.getAttribute(desAttributeId).getValue()
+execution.setVariable("attrId",attr)]]></script>
+    </scriptTask>
+    <sequenceFlow id="flow9" sourceRef="usertask4" targetRef="scripttask4"></sequenceFlow>
+    <userTask id="usertask5" name="User Task" activiti:candidateUsers="user(${sriram})">
+      <extensionElements>
+        <activiti:formProperty id="comId" name="Community Name" type="string" writable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="domId" name="Domain Name" type="string" writable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="asetId" name="Asset Name" type="string" writable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="attrId" name="Attribute Type" type="string" writable="false" required="true"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow10" sourceRef="scripttask4" targetRef="usertask5"></sequenceFlow>
+    <sequenceFlow id="flow11" sourceRef="usertask5" targetRef="endevent1"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_dynamicValuesAssignment">
+    <bpmndi:BPMNPlane bpmnElement="dynamicValuesAssignment" id="BPMNPlane_dynamicValuesAssignment">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="60.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="160.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="71.0" width="107.0" x="150.0" y="300.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask2" id="BPMNShape_usertask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="360.0" y="308.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="1090.0" y="355.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask2" id="BPMNShape_scripttask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="360.0" y="192.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask3" id="BPMNShape_usertask3">
+        <omgdc:Bounds height="55.0" width="105.0" x="599.0" y="192.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask3" id="BPMNShape_scripttask3">
+        <omgdc:Bounds height="55.0" width="105.0" x="599.0" y="335.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask4" id="BPMNShape_usertask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="820.0" y="335.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask4" id="BPMNShape_scripttask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="820.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask5" id="BPMNShape_usertask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="1040.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="95.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="160.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="212.0" y="245.0"></omgdi:waypoint>
+        <omgdi:waypoint x="203.0" y="300.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="257.0" y="335.0"></omgdi:waypoint>
+        <omgdi:waypoint x="360.0" y="335.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="412.0" y="308.0"></omgdi:waypoint>
+        <omgdi:waypoint x="412.0" y="247.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="465.0" y="219.0"></omgdi:waypoint>
+        <omgdi:waypoint x="599.0" y="219.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="651.0" y="247.0"></omgdi:waypoint>
+        <omgdi:waypoint x="651.0" y="335.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="704.0" y="362.0"></omgdi:waypoint>
+        <omgdi:waypoint x="820.0" y="362.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+        <omgdi:waypoint x="872.0" y="335.0"></omgdi:waypoint>
+        <omgdi:waypoint x="872.0" y="245.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
+        <omgdi:waypoint x="925.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1040.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
+        <omgdi:waypoint x="1092.0" y="245.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1107.0" y="355.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

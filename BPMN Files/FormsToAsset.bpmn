@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="formToAsset" name="BS Custom Inputs" isExecutable="true">
+    <documentation>Getting inputs from form and add into Asset</documentation>
+    <startEvent id="startevent1" name="Start" activiti:initiator="sriram">
+      <extensionElements>
+        <activiti:formProperty id="communityName" name="Community Name" type="string" default="BS Server Community" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="technologyAssetDomainId" name="Technology Asset Domain" type="string" default="Technology Asset Domain" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="technologyAssetDomainName" name="Technology Asset Domain Name" type="string" default="BS Tech Domain" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="databaseName" name="Database Name " type="string" default="Custom Database" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="databaseTypeId" name="Database Asset Type" type="string" default="Database" readable="false" required="true"></activiti:formProperty>
+        <activiti:formProperty id="attrName" name="Attribute Name" type="string" default="Description" readable="false" required="true"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <userTask id="usertask1" name="Enter Details" activiti:candidateUsers="{user(${sriram})}">
+      <documentation>Getting inputs from form and add into Asset</documentation>
+      <extensionElements>
+        <activiti:formProperty id="descriptionValue" name="Enter Description for Asset" type="string" required="true"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <scriptTask id="scripttask1" name="Script Task" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[import com.collibra.dgc.core.api.dto.instance.community.AddCommunityRequest
+import com.collibra.dgc.core.api.dto.instance.asset.AddAssetRequest;
+import com.collibra.dgc.core.api.dto.instance.attribute.AddAttributeRequest;
+import com.collibra.dgc.core.api.dto.instance.relation.AddRelationRequest;
+import com.collibra.dgc.core.api.dto.instance.domain.AddDomainRequest;
+import com.collibra.dgc.core.api.dto.instance.community.FindCommunitiesRequest;
+import com.collibra.dgc.core.api.dto.MatchMode
+import com.collibra.dgc.core.api.dto.meta.assettype.FindAssetTypesRequest;
+import com.collibra.dgc.core.api.dto.meta.domaintype.FindDomainTypesRequest;
+import com.collibra.dgc.core.api.dto.meta.attributetype.FindAttributeTypesRequest;
+import com.collibra.dgc.core.api.dto.meta.relationtype.FindRelationTypesRequest;
+import com.collibra.dgc.core.api.component.instance.AttributeApi;
+
+def communityList = communityApi.findCommunities(FindCommunitiesRequest.builder()
+  .name(communityName)
+  .build()).getResults()
+
+if(!communityList.isEmpty()){
+  def removeCom = communityApi.removeCommunityInJob(communityList.get(0).getId())
+}
+
+
+def SqlCommunityUuid = communityApi.addCommunity(AddCommunityRequest.builder()
+    .name(communityName)
+    .description(communityName)
+    .build()).getId()
+
+def communityList1 = communityApi.findCommunities(FindCommunitiesRequest.builder()
+  .name(communityName)
+  .build()).getResults()
+
+def getDomainTypeIdByName(String type){
+  def domainTypeList = domainTypeApi.findDomainTypes(FindDomainTypesRequest.builder()
+  .name(type)
+  .nameMatchMode(MatchMode.EXACT) 
+  .build()).getResults()
+
+  return domainTypeList.get(0).getId()
+}
+
+def techDomainUuid = domainApi.addDomain(AddDomainRequest.builder()
+        .name(technologyAssetDomainName)
+        .communityId(SqlCommunityUuid)
+        .typeId(getDomainTypeIdByName(technologyAssetDomainId))
+        .build()).getId()
+
+def getAssetIdByName(String type){
+  def assetList = assetTypeApi.findAssetTypes(FindAssetTypesRequest.builder()
+  .name(type)
+  .nameMatchMode(MatchMode.EXACT) 
+  .build()).getResults()
+
+  return assetList.get(0).getId()
+}
+
+def newDbAssetUuid = assetApi.addAsset(AddAssetRequest.builder()
+           .name(databaseName)
+           .displayName(databaseName)
+           .typeId(getAssetIdByName(databaseTypeId))
+           .domainId(techDomainUuid)
+           .build()).getId()
+
+
+
+
+ def  attrId= attributeApi.addAttribute(AddAttributeRequest.builder()
+ .assetId(newDbAssetUuid)
+ .typeId(string2Uuid("00000000-0000-0000-0000-000000003114"))
+ .value(descriptionValue)
+ .build()).getId()  
+
+
+def attr = attributeApi.getAttribute(attrId).getValue()
+
+
+execution.setVariable("descriptionDisplay",attr)
+
+]]></script>
+    </scriptTask>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="usertask1"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="usertask1" targetRef="scripttask1"></sequenceFlow>
+    <userTask id="usertask2" name="Details" activiti:candidateUsers="{user(${sriram})}">
+      <documentation>User Details</documentation>
+      <extensionElements>
+        <activiti:formProperty id="descriptionDisplay" name="Description" type="string" writable="false"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow3" sourceRef="usertask2" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow4" sourceRef="scripttask1" targetRef="usertask2"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_formToAsset">
+    <bpmndi:BPMNPlane bpmnElement="formToAsset" id="BPMNPlane_formToAsset">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="210.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="940.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="330.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="580.0" y="190.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask2" id="BPMNShape_usertask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="780.0" y="200.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="245.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="435.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="580.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="885.0" y="227.0"></omgdi:waypoint>
+        <omgdi:waypoint x="940.0" y="217.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="685.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="780.0" y="227.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
