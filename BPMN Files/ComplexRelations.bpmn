@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.collibra.com/apiv2">
+  <process id="bsComplexRelations" name="BS Complex Relations" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:initiator="startUser">
+      <extensionElements>
+        <activiti:formProperty id="taskName" name="Task Name" type="string"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <scriptTask id="scripttask1" name="Complex Relations" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script><![CDATA[import java.io.File
+import java.io.FileOutputStream
+import java.io.FileInputStream
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.xssf.usermodel.XSSFRow
+import org.apache.poi.xssf.usermodel.XSSFCell
+import org.apache.poi.xssf.usermodel.XSSFSheet
+import java.util.Iterator
+import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory
+import com.collibra.dgc.core.api.model.ResourceType
+
+
+// def fileDetails = fileApi.getFileInfo(string2Uuid(file))
+//   def oldfileContents = fileApi.getFileAsStream(string2Uuid(file))
+//   def attachment= attachmentApi.addAttachment(builders.get("AddAttachmentRequest")
+//   .baseResourceId(string2Uuid("c7761162-8f7d-44d1-865c-59e50f391550"))
+//   .baseResourceType(ResourceType.Community)
+//   .fileName(fileDetails.getName())
+//   .fileStream(oldfileContents)
+//   .build())  
+
+loggerApi.info("============= Searching for attachemnt")
+def attachmentsList = attachmentApi.findAttachments(builders.get("FindAttachmentsRequest")
+    .baseResourceId(string2Uuid("c7761162-8f7d-44d1-865c-59e50f391550"))
+    .build()).getResults()
+
+loggerApi.info("-=-=-=-=-=-=-=-=-=-=-==-= File Id: "+ attachmentsList)
+loggerApi.info("-=-=-=-=-=-=-=-=-=-=-==-= File Id: "+ attachmentsList.find().getFile().getId())
+
+def fileContents = fileApi.getFileAsStream(attachmentsList.find().getFile().getId())
+def fileName = attachmentsList.find().getFile().getName()
+loggerApi.info("-=-=-=-=-=-=-=-=-=-=-==-= File Name: "+ attachmentsList.find().getFile().getName())
+
+// XSSFWorkbook relationWorkbook= new XSSFWorkbook(fileContents)
+
+// def relationTypeList = relationTypeApi.findRelationTypes(builders.get("FindRelationTypesRequest")
+//   .sourceTypeName("Database")
+//   .build()).getResults()
+
+// FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+
+// def sheetName = new Date().format("dd.MM.yyy hh;mm")
+// loggerApi.info("======================= "+ sheetName)
+// XSSFSheet newSheet = relationWorkbook.createSheet(sheetName)
+// XSSFRow newRow
+// XSSFCell newCell
+// def rowNum=0 
+
+// relationTypeList.each{ relation ->    
+//         newRow = newSheet.createRow(rowNum)
+//         newCell= newRow.createCell(0).setCellValue(relation.getSourceType().getName())
+//         newCell= newRow.createCell(1).setCellValue(relation.getRole())
+//         newCell= newRow.createCell(2).setCellValue(relation.getCoRole())
+//         newCell= newRow.createCell(3).setCellValue(relation.getTargetType().getName())
+//         rowNum+=1
+// }
+
+// relationWorkbook.write(fileOutputStream)
+// relationWorkbook.commit()
+// fileOutputStream.close()
+
+// def updatedFile = fileApi.addFile(builders.get("AddFileRequest")
+//     .name(fileName)
+//     .fileStream(new FileInputStream(fileName))
+//     .build())
+
+// loggerApi.info("==================== updated file "+ updatedFile.getId())
+// loggerApi.info("==================== updated file "+ updatedFile)
+
+
+// attachment = attachmentApi.addAttachment(builders.get("AddAttachmentRequest")
+//   .baseResourceId(string2Uuid("c7761162-8f7d-44d1-865c-59e50f391550"))
+//   .baseResourceType(ResourceType.Community)
+//   .fileName(updatedFile.getName())
+//   .fileStream(fileApi.getFileAsStream(updatedFile.getId()))
+//   .build()) 
+
+
+XSSFWorkbook workbook= new XSSFWorkbook(fileContents)
+XSSFSheet existingSheet = workbook.getSheetAt(0);
+XSSFSheet updatedSheet = workbook.getSheetAt(1);
+XSSFRow existingRow 
+XSSFRow updatedRow 
+XSSFCell cell
+def flag
+
+for(def i=0;i<=updatedSheet.getLastRowNum();i++){
+    flag=0
+    updatedRow = updatedSheet.getRow(i)                             
+
+    for(int j=0;j<=existingSheet.getLastRowNum();j++){   
+
+        existingRow = existingSheet.getRow(j)                               
+        // loggerApi.info("--------------------- "+ existingRow.getCell(0)+ "------" + updatedRow.getCell(0) )
+        // loggerApi.info("--------------------- "+ existingRow.getCell(3)+ "------" + updatedRow.getCell(3) )
+        // loggerApi.info("--------------------- "+ existingRow.getCell(1)+ "------" + updatedRow.getCell(1) )
+        // loggerApi.info("--------------------- "+ existingRow.getCell(2)+ "------" + updatedRow.getCell(2) )
+        if(!existingRow.getCell(4).toString().equals("done")){
+            if(existingRow.getCell(0).toString().equals(updatedRow.getCell(0).toString()) && 
+                existingRow.getCell(3).toString().equals(updatedRow.getCell(3).toString())){
+                if(existingRow.getCell(1).toString().equals(updatedRow.getCell(1).toString()) && 
+                    existingRow.getCell(2).toString().equals(updatedRow.getCell(2).toString())){
+                    loggerApi.info(">>>>>>>>>>>>>>>>> No changes in relation")
+                    existingRow.createCell(4).setCellValue("done")
+                    flag=1
+                    break;
+                } 
+            }
+            if(existingRow.getCell(0).toString().equals(updatedRow.getCell(0).toString()) && 
+                existingRow.getCell(3).toString().equals(updatedRow.getCell(3).toString())){
+                
+                    loggerApi.info(">>>>>>>>>>>>>>>>>>>>> Changes in relation")
+                    flag=2
+                    break;
+            }
+
+        }
+        // if((!existingRow.getCell(0).toString().equals(updatedRow.getCell(0).toString()) && 
+        //     !existingRow.getCell(3).toString().equals(updatedRow.getCell(3).toString())) ||
+        //     (existingRow.getCell(0).toString().equals(updatedRow.getCell(0).toString()) &&
+        //     !existingRow.getCell(3).toString().equals(updatedRow.getCell(3).toString())) ||
+        //     (!existingRow.getCell(0).toString().equals(updatedRow.getCell(0).toString()) &&
+        //     existingRow.getCell(3).toString().equals(updatedRow.getCell(3).toString()))){
+            
+        // }
+    }
+    if(flag==0){
+        loggerApi.info(">>>>>>>>>>>>>>>>>>> New Relation Added")  
+    }
+}
+
+
+
+
+loggerApi.info("==================== File asstached ===============")
+
+loggerApi.info("===================>>>> End <<<<=================== ")
+
+
+
+]]></script>
+    </scriptTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <sequenceFlow id="flow1" sourceRef="scripttask1" targetRef="endevent1"></sequenceFlow>
+    <userTask id="usertask1" name="Upload File" activiti:candidateUsers="user(${startUser})">
+      <documentation>${taskName}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="file" name="Uplaod Excel File" type="fileUpload"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow3" sourceRef="usertask1" targetRef="scripttask1"></sequenceFlow>
+    <sequenceFlow id="flow4" sourceRef="startevent1" targetRef="usertask1"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_bsComplexRelations">
+    <bpmndi:BPMNPlane bpmnElement="bsComplexRelations" id="BPMNPlane_bsComplexRelations">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="160.0" y="253.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="61.0" width="105.0" x="642.0" y="253.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="880.0" y="253.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="405.0" y="243.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="747.0" y="283.0"></omgdi:waypoint>
+        <omgdi:waypoint x="880.0" y="270.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="510.0" y="270.0"></omgdi:waypoint>
+        <omgdi:waypoint x="642.0" y="283.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="195.0" y="270.0"></omgdi:waypoint>
+        <omgdi:waypoint x="405.0" y="270.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
